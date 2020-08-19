@@ -45,9 +45,9 @@ namespace NSwag.CodeGeneration.TypeScript.Models
         {
             get
             {
-                if (_settings.TypeScriptGeneratorSettings.SupportsStrictNullChecks)
+                if (_settings.TypeScriptGeneratorSettings.SupportsStrictNullChecks && (IsNullable == true && !IsRequired))
                 {
-                    return (IsNullable == true ? " | null" : "") + (IsRequired == false ? " | undefined" : "");
+                    return " | undefined";
                 }
                 else
                 {

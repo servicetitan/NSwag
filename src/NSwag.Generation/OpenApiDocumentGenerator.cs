@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="WebApiToSwaggerGenerator.cs" company="NSwag">
 //     Copyright (c) Rico Suter. All rights reserved.
 // </copyright>
@@ -91,7 +91,7 @@ namespace NSwag.Generation
 
             operationParameter.Name = name;
             operationParameter.IsRequired = contextualParameter.ContextAttributes.FirstAssignableToTypeNameOrDefault("RequiredAttribute", TypeNameStyle.Name) != null;
-            operationParameter.IsNullableRaw = typeDescription.IsNullable;
+            operationParameter.IsNullableRaw = _settings.AllowNullableBodyParameters && typeDescription.IsNullable;
 
             if (description != string.Empty)
             {
@@ -134,9 +134,10 @@ namespace NSwag.Generation
             }
             else
             {
+                var isNullable = _settings.AllowNullableBodyParameters && typeDescription.IsNullable;
                 operationParameter = new OpenApiParameter();
                 operationParameter.Schema = _settings.SchemaGenerator.GenerateWithReferenceAndNullability<JsonSchema>(
-                    contextualParameter, typeDescription.IsNullable, _schemaResolver);
+                    contextualParameter, isNullable, _schemaResolver);
 
                 _settings.SchemaGenerator.ApplyDataAnnotations(operationParameter.Schema, typeDescription);
             }
@@ -186,6 +187,7 @@ namespace NSwag.Generation
             {
                 operationParameter.CollectionFormat = OpenApiParameterCollectionFormat.Multi;
             }
+            operationParameter.IsNullableRaw = false;
 
             return operationParameter;
         }

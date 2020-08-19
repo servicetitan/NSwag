@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="OperationParameterProcessor.cs" company="NSwag">
 //     Copyright (c) Rico Suter. All rights reserved.
 // </copyright>
@@ -125,7 +125,7 @@ namespace NSwag.Generation.WebApi.Processors
                                     if (context.OperationDescription.Method == OpenApiOperationMethod.Get)
                                     {
                                         operationParameter = AddPrimitiveParameter(uriParameterName, context, contextualParameter);
-                                    } 
+                                    }
                                     else
                                     {
                                         // Try to find a [WillReadBody] attribute on either the action parameter or the bindingAttribute's class
@@ -184,7 +184,7 @@ namespace NSwag.Generation.WebApi.Processors
                 {
                     operationParameter.Position = position;
                     position++;
-                    
+
                     ((Dictionary<ParameterInfo, OpenApiParameter>)context.Parameters)[contextualParameter.ParameterInfo] = operationParameter;
                 }
             }

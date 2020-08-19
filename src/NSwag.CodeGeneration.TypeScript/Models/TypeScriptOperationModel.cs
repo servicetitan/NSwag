@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="TypeScriptOperationModel.cs" company="NSwag">
 //     Copyright (c) Rico Suter. All rights reserved.
 // </copyright>
@@ -70,7 +70,7 @@ namespace NSwag.CodeGeneration.TypeScript.Models
                 var isNullable = response.Value?.IsNullable(_settings.CodeGeneratorSettings.SchemaType) == true;
 
                 var resultType = isNullable && SupportsStrictNullChecks && UnwrappedResultType != "void" && UnwrappedResultType != "null" ?
-                    UnwrappedResultType + " | null" :
+                    UnwrappedResultType + " | undefined" :
                     UnwrappedResultType;
 
                 if (WrapResponse)
