@@ -187,8 +187,6 @@ namespace NSwag.Generation
             {
                 operationParameter.CollectionFormat = OpenApiParameterCollectionFormat.Multi;
             }
-            operationParameter.IsNullableRaw = false;
-
             return operationParameter;
         }
     }
