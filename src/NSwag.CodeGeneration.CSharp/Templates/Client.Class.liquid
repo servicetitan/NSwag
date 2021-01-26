@@ -283,7 +283,7 @@
 
                     var status_ = (int)response_.StatusCode;
 {%     for response in operation.Responses -%}
-                    if (status_ == {{ response.StatusCode }} || status_ == 204{% if response.CheckChunkedStatusCode %} || status_ == 206{% endif %})
+                    if (status_ == {{ response.StatusCode }}{% if response.StatusCode != 204 %} || status_ == 204{% endif %}{% if response.CheckChunkedStatusCode %} || status_ == 206{% endif %})
                     {
                         {% template Client.Class.ProcessResponse %}
                     }
