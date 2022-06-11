@@ -69,8 +69,9 @@ namespace NSwag.CodeGeneration.TypeScript.Models
                 var response = GetSuccessResponse();
                 var isNullable = response.Value?.IsNullable(_settings.CodeGeneratorSettings.SchemaType) == true;
 
+                // PATCH: Some customization, not sure exactly what the initial use-case was
                 var resultType = isNullable && SupportsStrictNullChecks && UnwrappedResultType != "void" && UnwrappedResultType != "null" ?
-                    UnwrappedResultType + " | null" :
+                    UnwrappedResultType + " | undefined" :
                     UnwrappedResultType;
 
                 if (WrapResponse)

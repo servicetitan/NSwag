@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------
 // <copyright file="DefaultParameterNameGenerator.cs" company="NSwag">
 //     Copyright (c) Rico Suter. All rights reserved.
 // </copyright>
@@ -21,8 +21,10 @@ namespace NSwag.CodeGeneration
         /// <returns>The parameter name.</returns>
         public string Generate(OpenApiParameter parameter, IEnumerable<OpenApiParameter> allParameters)
         {
-            var name = !string.IsNullOrEmpty(parameter.OriginalName) ? 
-                parameter.OriginalName : parameter.Name;
+            // PATCH: be compatible with previous generator version for now:
+            var name = parameter.Name;
+            //var name = !string.IsNullOrEmpty(parameter.OriginalName) ? 
+            //    parameter.OriginalName : parameter.Name;
 
             if (string.IsNullOrEmpty(name))
             {
