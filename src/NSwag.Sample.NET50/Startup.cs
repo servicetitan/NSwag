@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json.Converters;
 using NJsonSchema.Generation;
+using System.Text.Json.Serialization;
 
-namespace NSwag.Sample.NETCore31
+namespace NSwag.Sample.NET50
 {
     public class Startup
     {
@@ -23,7 +23,11 @@ namespace NSwag.Sample.NETCore31
 
             services
                 .AddControllers()
-                .AddNewtonsoftJson(options => options.SerializerSettings.Converters.Add(new StringEnumConverter()));
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
 
             services.AddOpenApiDocument(document =>
             {
@@ -47,12 +51,13 @@ namespace NSwag.Sample.NETCore31
                 endpoints.MapControllers();
             });
 
-            app.UseOpenApi();
-            app.UseSwaggerUi3();
+            app.UseOpenApi(p => p.Path = "/swagger/{documentName}/swagger.yaml");
+            app.UseSwaggerUi3(p => p.DocumentPath = "/swagger/{documentName}/swagger.yaml");
             //app.UseApimundo();
             app.UseApimundo(settings =>
             {
                 //settings.CompareTo = "a:a:27:25:15:latest";
+                settings.DocumentPath = "/swagger/v1/swagger.yaml";
                 settings.ApimundoUrl = "https://localhost:5001";
             });
         }

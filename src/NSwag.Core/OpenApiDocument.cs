@@ -20,11 +20,15 @@ using NJsonSchema.Generation;
 using NJsonSchema.Infrastructure;
 using NSwag.Collections;
 
+#pragma warning disable 618 // obsolete warning for ToJson
+
 namespace NSwag
 {
     /// <summary>Describes a JSON web service.</summary>
     public partial class OpenApiDocument : JsonExtensionObject, IDocumentPathProvider
     {
+        private readonly ObservableDictionary<string, OpenApiPathItem> _paths;
+
         /// <summary>Initializes a new instance of the <see cref="OpenApiDocument"/> class.</summary>
         public OpenApiDocument()
         {
@@ -41,12 +45,14 @@ namespace NSwag
                 }
             };
 
-            Paths = paths;
+            _paths = paths;
             Info = new OpenApiInfo();
         }
 
+        private static readonly string _toolChainVersion = typeof(OpenApiDocument).GetTypeInfo().Assembly.GetName().Version.ToString();
+
         /// <summary>Gets the NSwag toolchain version.</summary>
-        public static string ToolchainVersion => typeof(OpenApiDocument).GetTypeInfo().Assembly.GetName().Version.ToString();
+        public static string ToolchainVersion => _toolChainVersion;
 
         /// <summary>Gets or sets the preferred schema type.</summary>
         [JsonIgnore]
@@ -78,7 +84,7 @@ namespace NSwag
 
         /// <summary>Gets or sets the operations.</summary>
         [JsonProperty(PropertyName = "paths", Order = 11, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public IDictionary<string, OpenApiPathItem> Paths { get; }
+        public IDictionary<string, OpenApiPathItem> Paths => _paths;
 
         /// <summary>Gets or sets the components.</summary>
         [JsonProperty(PropertyName = "components", Order = 12, DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -153,7 +159,7 @@ namespace NSwag
         /// <param name="expectedSchemaType">The expected schema type which is used when the type cannot be determined.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="OpenApiDocument"/>.</returns>
-        public static Task<OpenApiDocument> FromJsonAsync(string data, string documentPath, 
+        public static Task<OpenApiDocument> FromJsonAsync(string data, string documentPath,
             SchemaType expectedSchemaType, CancellationToken cancellationToken = default)
         {
             return FromJsonAsync(data, documentPath, expectedSchemaType, null, cancellationToken);
@@ -166,7 +172,7 @@ namespace NSwag
         /// <param name="referenceResolverFactory">The JSON reference resolver factory.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="OpenApiDocument"/>.</returns>
-        public static async Task<OpenApiDocument> FromJsonAsync(string data, string documentPath, SchemaType expectedSchemaType, 
+        public static async Task<OpenApiDocument> FromJsonAsync(string data, string documentPath, SchemaType expectedSchemaType,
             Func<OpenApiDocument, JsonReferenceResolver> referenceResolverFactory, CancellationToken cancellationToken = default)
         {
             // For explanation of the regex use https://regexr.com/ and the below unescaped pattern that is without named groups
@@ -235,50 +241,80 @@ namespace NSwag
         {
             get
             {
-                return Paths.SelectMany(p => p.Value.ActualPathItem.Select(o => new OpenApiOperationDescription
+                foreach (var p in _paths)
                 {
-                    Path = p.Key,
-                    Method = o.Key,
-                    Operation = o.Value
-                }));
+                    foreach (var o in p.Value.ActualPathItem)
+                    {
+                        yield return new OpenApiOperationDescription
+                        {
+                            Path = p.Key,
+                            Method = o.Key,
+                            Operation = o.Value
+                        };
+                    }
+                }
             }
         }
 
         /// <summary>Generates missing or non-unique operation IDs.</summary>
         public void GenerateOperationIds()
         {
-            // TODO: Improve this method
-
             // Generate missing IDs
-            foreach (var operation in Operations.Where(o => string.IsNullOrEmpty(o.Operation.OperationId)))
+            var operationsList = Operations.ToList();
+
+            foreach (var operation in operationsList.Where(o => string.IsNullOrEmpty(o.Operation.OperationId)))
             {
                 operation.Operation.OperationId = GetOperationNameFromPath(operation);
             }
 
             // Find non-unique operation IDs
-            foreach (var group in Operations.GroupBy(o => o.Operation.OperationId))
+
+            // 1: Append all to methods returning collections
+            foreach (var group in operationsList.GroupBy(o => o.Operation.OperationId))
+            {
+                if (group.Count() > 1)
+                {
+                    var collections = group.Where(o => o.Operation.ActualResponses.Any(r =>
+                              HttpUtilities.IsSuccessStatusCode(r.Key) &&
+                              r.Value.Schema?.ActualSchema.Type == JsonObjectType.Array));
+                    // if we have just collections, adding All will not help in discrimination
+                    if (collections.Count() == group.Count()) continue;
+
+                    foreach (var o in group)
+                    {
+                        var isCollection = o.Operation.ActualResponses.Any(r =>
+                            HttpUtilities.IsSuccessStatusCode(r.Key) &&
+                            r.Value.Schema?.ActualSchema.Type == JsonObjectType.Array);
+
+                        if (isCollection)
+                        {
+                            o.Operation.OperationId += "All";
+                        }
+                    }
+                }
+            }
+
+            // 2: Append the Method type
+            foreach (var group in operationsList.GroupBy(o => o.Operation.OperationId))
+            {
+                if (group.Count() > 1)
+                {
+                    var methods = group.Select(o => o.Method.ToUpper()).Distinct();
+                    if (methods.Count() == 1) continue;
+
+                    foreach (var o in group)
+                    {
+                        o.Operation.OperationId += o.Method.ToUpper();
+                    }
+                }
+            }
+
+            // 3: Append numbers as last resort
+            foreach (var group in operationsList.GroupBy(o => o.Operation.OperationId))
             {
                 var operations = group.ToList();
                 if (group.Count() > 1)
                 {
-                    // Append "All" if possible
-                    var arrayResponseOperation = operations.FirstOrDefault(
-                        o => o.Operation.ActualResponses.Any(r =>
-                            HttpUtilities.IsSuccessStatusCode(r.Key) &&
-                            r.Value.Schema?.ActualSchema.Type == JsonObjectType.Array));
-
-                    if (arrayResponseOperation != null)
-                    {
-                        var name = arrayResponseOperation.Operation.OperationId + "All";
-                        if (Operations.All(o => o.Operation.OperationId != name))
-                        {
-                            arrayResponseOperation.Operation.OperationId = name;
-                            operations.Remove(arrayResponseOperation);
-                            GenerateOperationIds();
-                            return;
-                        }
-                    }
-
                     // Add numbers
                     var i = 2;
                     foreach (var operation in operations.Skip(1))

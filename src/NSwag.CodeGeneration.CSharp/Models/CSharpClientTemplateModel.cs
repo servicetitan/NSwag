@@ -158,24 +158,27 @@ namespace NSwag.CodeGeneration.CSharp.Models
         {
             get
             {
-                // TODO: Fix this in NJS (remove ", ", cleanup)
                 var parameterCode = CSharpJsonSerializerGenerator.GenerateJsonSerializerParameterCode(
                     _settings.CSharpGeneratorSettings, RequiresJsonExceptionConverter ? new[] { "JsonExceptionConverter" } : null);
 
-                if (string.IsNullOrEmpty(parameterCode))
+                if (!parameterCode.Contains("new Newtonsoft.Json.JsonSerializerSettings"))
                 {
-                    parameterCode = "new Newtonsoft.Json.JsonSerializerSettings()";
-                }
-                else if(!parameterCode.Contains("new Newtonsoft.Json.JsonSerializerSettings"))
-                {
-                    parameterCode = "new Newtonsoft.Json.JsonSerializerSettings { Converters = " + parameterCode.Substring(2) + " }";
-                }
-                else
-                {
-                    parameterCode = parameterCode.Substring(2);
+                    parameterCode = _settings.CSharpGeneratorSettings.JsonLibrary == CSharpJsonLibrary.NewtonsoftJson ?
+                        "new Newtonsoft.Json.JsonSerializerSettings { Converters = " + parameterCode + " }" :
+                        parameterCode;
                 }
 
                 return parameterCode;
+            }
+        }
+
+        /// <summary>Gets the JSON converters array code.</summary>
+        public string JsonConvertersArrayCode
+        {
+            get
+            {
+                return CSharpJsonSerializerGenerator.GenerateJsonConvertersArrayCode(
+                    _settings.CSharpGeneratorSettings, RequiresJsonExceptionConverter ? new[] { "JsonExceptionConverter" } : null);
             }
         }
 
@@ -191,7 +194,9 @@ namespace NSwag.CodeGeneration.CSharp.Models
         /// <summary>Gets the extension data.</summary>
         public IDictionary<string, object> ExtensionData => _document.ExtensionData;
 
-        private bool RequiresJsonExceptionConverter => _settings.CSharpGeneratorSettings.ExcludedTypeNames?.Contains("JsonExceptionConverter") != true &&
+        private bool RequiresJsonExceptionConverter =>
+            _settings.CSharpGeneratorSettings.JsonLibrary == CSharpJsonLibrary.NewtonsoftJson &&
+            _settings.CSharpGeneratorSettings.ExcludedTypeNames?.Contains("JsonExceptionConverter") != true &&
             _document.Operations.Any(o => o.Operation.ActualResponses.Any(r => r.Value.Schema?.InheritsSchema(_exceptionSchema) == true));
     }
 }

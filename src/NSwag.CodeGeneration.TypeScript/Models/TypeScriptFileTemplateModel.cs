@@ -91,6 +91,9 @@ namespace NSwag.CodeGeneration.TypeScript.Models
         /// <summary>Gets a value indicating whether to call 'transformOptions' on the base class or extension class.</summary>
         public bool UseTransformOptionsMethod => _settings.UseTransformOptionsMethod;
 
+        /// <summary>Gets a value indicating whether to include the httpContext parameter (Angular template only, default: false).</summary>
+        public bool IncludeHttpContext => _settings.IncludeHttpContext;
+
         /// <summary>Gets the clients code.</summary>
         public string Clients => _settings.GenerateClientClasses ? _clientCode : string.Empty;
 
@@ -127,8 +130,8 @@ namespace NSwag.CodeGeneration.TypeScript.Models
         public bool RequiresFileParameterInterface =>
             !_settings.TypeScriptGeneratorSettings.ExcludedTypeNames.Contains("FileParameter") &&
             (_document.Operations.Any(o => o.Operation.ActualParameters.Any(p => p.ActualTypeSchema.IsBinary)) ||
-             _document.Operations.Any(o => o.Operation?.RequestBody?.Content?.Any(c => c.Value.Schema?.IsBinary == true || 
-                                                                                       c.Value.Schema?.ActualProperties.Any(p => p.Value.IsBinary || 
+             _document.Operations.Any(o => o.Operation?.RequestBody?.Content?.Any(c => c.Value.Schema?.IsBinary == true ||
+                                                                                       c.Value.Schema?.ActualProperties.Any(p => p.Value.IsBinary ||
                                                                                                                                  p.Value.Item?.IsBinary == true ||
                                                                                                                                  p.Value.Items.Any(i => i.IsBinary)
                                                                                                                                  ) == true) == true));
@@ -157,6 +160,9 @@ namespace NSwag.CodeGeneration.TypeScript.Models
 
         /// <summary>Gets a value indicating whether MomentJS duration format is needed (moment-duration-format package).</summary>
         public bool RequiresMomentJSDuration => Types?.Contains("moment.duration(") == true;
+
+        /// <summary>Gets a value indicating whether the target TypeScript version supports override keyword.</summary>
+        public bool SupportsOverrideKeyword => _settings.TypeScriptGeneratorSettings.SupportsOverrideKeyword;
 
         private string GenerateExtensionCodeAfter()
         {

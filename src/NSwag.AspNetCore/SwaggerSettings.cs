@@ -29,7 +29,7 @@ namespace NSwag.AspNetCore
     public class SwaggerSettings
 #endif
     {
-        /// <summary>Initializes a new instance of the <see cref="SwaggerSettings"/> class.</summary>
+        /// <summary>Initializes a new instance of the class.</summary>
         public SwaggerSettings()
         {
 #if AspNetOwin
@@ -65,7 +65,9 @@ namespace NSwag.AspNetCore
         public TimeSpan ExceptionCacheTime { get; set; } = TimeSpan.FromSeconds(10);
 #endif
 
+#pragma warning disable 618
         internal virtual string ActualSwaggerDocumentPath => DocumentPath.Substring(MiddlewareBasePath?.Length ?? 0);
+#pragma warning restore 618
 
 #if AspNetOwin
         internal T CreateGeneratorSettings(JsonSerializerSettings serializerSettings, object mvcOptions)

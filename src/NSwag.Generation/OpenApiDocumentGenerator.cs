@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------
 // <copyright file="WebApiToSwaggerGenerator.cs" company="NSwag">
 //     Copyright (c) Rico Suter. All rights reserved.
 // </copyright>
@@ -72,7 +72,7 @@ namespace NSwag.Generation
         /// <returns>The parameter.</returns>
         public OpenApiParameter CreatePrimitiveParameter(string name, ContextualParameterInfo contextualParameter)
         {
-            var documentation = contextualParameter.GetDescription();
+            var documentation = contextualParameter.GetDescription(_settings);
             return CreatePrimitiveParameter(name, documentation, contextualParameter);
         }
 
@@ -91,7 +91,7 @@ namespace NSwag.Generation
 
             operationParameter.Name = name;
             operationParameter.IsRequired = contextualParameter.ContextAttributes.FirstAssignableToTypeNameOrDefault("RequiredAttribute", TypeNameStyle.Name) != null;
-            operationParameter.IsNullableRaw = _settings.AllowNullableBodyParameters && typeDescription.IsNullable;
+            operationParameter.IsNullableRaw = typeDescription.IsNullable;
 
             if (description != string.Empty)
             {
@@ -134,10 +134,9 @@ namespace NSwag.Generation
             }
             else
             {
-                var isNullable = _settings.AllowNullableBodyParameters && typeDescription.IsNullable;
                 operationParameter = new OpenApiParameter();
                 operationParameter.Schema = _settings.SchemaGenerator.GenerateWithReferenceAndNullability<JsonSchema>(
-                    contextualParameter, isNullable, _schemaResolver);
+                    contextualParameter, typeDescription.IsNullable, _schemaResolver);
 
                 _settings.SchemaGenerator.ApplyDataAnnotations(operationParameter.Schema, typeDescription);
             }
@@ -187,6 +186,7 @@ namespace NSwag.Generation
             {
                 operationParameter.CollectionFormat = OpenApiParameterCollectionFormat.Multi;
             }
+
             return operationParameter;
         }
     }

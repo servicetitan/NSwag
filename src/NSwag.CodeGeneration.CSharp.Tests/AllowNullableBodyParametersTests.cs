@@ -1,7 +1,8 @@
+using Microsoft.AspNetCore.Mvc;
+using NSwag.CodeGeneration.OperationNameGenerators;
+using NSwag.Generation.WebApi;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using NSwag.Generation.WebApi;
 using Xunit;
 
 namespace NSwag.CodeGeneration.CSharp.Tests
@@ -9,15 +10,61 @@ namespace NSwag.CodeGeneration.CSharp.Tests
     public class AllowNullableBodyParametersTests
     {
         [Fact]
+        public async Task TestNoGuardForOptionalBodyParameter()
+        {
+            // Arrange
+            var swagger =
+@"{
+  ""openapi"": ""3.0.1"",
+  ""paths"": {
+    ""/definitions/{definitionId}/elements"": {
+      ""get"": {
+        ""operationId"": ""elements_LIST_1"",
+        ""requestBody"": {
+          ""content"": {
+            ""*/*"": {
+              ""schema"": {
+                ""type"": ""integer"",
+                ""format"": ""int64""
+              }
+            }
+          }
+        },
+        ""responses"": {
+          ""200"": {
+            ""description"": ""Success""
+          }
+        }
+      }
+    }
+  }
+}";
+            var document = await OpenApiDocument.FromJsonAsync(swagger);
+
+            // Act
+            var codeGen = new CSharpClientGenerator(document, new CSharpClientGeneratorSettings()
+            {
+                UseBaseUrl = false,
+                GenerateClientInterfaces = true,
+                OperationNameGenerator = new SingleClientFromOperationIdOperationNameGenerator()
+            });
+
+            var code = codeGen.GenerateFile();
+
+            // Assert
+            Assert.DoesNotContain("throw new System.ArgumentNullException(\"body\")", code);
+        }
+
+        [Fact]
         public async Task TestNullableBodyWithAllowNullableBodyParameters()
         {
-            //// Arrange
+            // Arrange
             var generator = await GenerateCode(true);
 
-            //// Act
+            // Act
             var code = generator.GenerateFile();
 
-            //// Assert
+            // Assert
             Assert.Contains("throw new System.ArgumentNullException(\"requiredBody\")", code);
             Assert.DoesNotContain("throw new System.ArgumentNullException(\"notRequiredBody\")", code);
         }
@@ -25,13 +72,13 @@ namespace NSwag.CodeGeneration.CSharp.Tests
         [Fact]
         public async Task TestNullableBodyWithoutAllowNullableBodyParameters()
         {
-            //// Arrange
+            // Arrange
             var generator = await GenerateCode(false);
 
-            //// Act
+            // Act
             var code = generator.GenerateFile();
 
-            //// Assert
+            // Assert
             Assert.Contains("throw new System.ArgumentNullException(\"requiredBody\")", code);
             Assert.Contains("throw new System.ArgumentNullException(\"notRequiredBody\")", code);
         }

@@ -52,11 +52,17 @@ namespace NSwag.CodeGeneration.TypeScript.Models
         /// <summary>Gets a value indicating whether DayJS is required.</summary>
         public bool UseDayJS => _settings.TypeScriptGeneratorSettings.DateTimeType == TypeScriptDateTimeType.DayJS;
 
+        /// <summary>Gets a value indicating whether Luxon is required.</summary>
+        public bool UseLuxon => _settings.TypeScriptGeneratorSettings.DateTimeType == TypeScriptDateTimeType.Luxon;
+
         /// <summary>Gets a value indicating whether to use RxJs 5.</summary>
         public bool UseRxJs5 => _settings.RxJsVersion < 6.0m;
 
         /// <summary>Gets a value indicating whether to use RxJs 6.</summary>
         public bool UseRxJs6 => _settings.RxJsVersion >= 6.0m;
+
+        /// <summary>Gets a value indicating whether to use RxJs 7.</summary>
+        public bool UseRxJs7 => _settings.RxJsVersion >= 7.0m;
 
         /// <summary>Gets Rxjs information.</summary>
         public TypeScriptFrameworkRxJsModel RxJs { get; }

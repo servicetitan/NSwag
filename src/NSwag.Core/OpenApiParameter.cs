@@ -44,6 +44,10 @@ namespace NSwag
             }
         }
 
+        /// <summary>Gets or sets a original name property x-originalName which is often used in code generation (default: null).</summary>
+        [JsonProperty(PropertyName = "x-originalName", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        public string OriginalName { get; set; }
+
         /// <summary>Gets or sets the kind of the parameter.</summary>
         [JsonProperty(PropertyName = "in", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public OpenApiParameterKind Kind
@@ -97,7 +101,7 @@ namespace NSwag
         public bool AllowEmptyValue { get; set; }
 
         /// <summary>Gets or sets the description. </summary>
-        [Newtonsoft.Json.JsonProperty("description", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty("description", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         public override string Description
         {
             get => base.Description;
@@ -116,7 +120,7 @@ namespace NSwag
         [JsonProperty(PropertyName = "collectionFormat", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public OpenApiParameterCollectionFormat CollectionFormat { get; set; }
 
-        /// <summary>Gets or sets the headers (OpenAPI only).</summary>
+        /// <summary>Gets or sets the examples (OpenAPI only).</summary>
         [JsonProperty(PropertyName = "examples", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public IDictionary<string, OpenApiExample> Examples
         {
@@ -245,7 +249,7 @@ namespace NSwag
                 {
                     var consumes = parent.ActualConsumes;
                     return consumes?.Any() == true &&
-                           (Schema?.IsBinary != false || 
+                           (Schema?.IsBinary != false ||
                             consumes.Contains("multipart/form-data")) &&
                            consumes?.Any(p => p.Contains("*/*")) == false &&
                            consumes.Any(p => AppJsonRegex.IsMatch(p)) == false;

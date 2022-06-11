@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using NJsonSchema.CodeGeneration.TypeScript;
 using NJsonSchema.Converters;
 using NSwag.Generation.WebApi;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Xunit;
 
@@ -38,12 +39,20 @@ namespace NSwag.CodeGeneration.TypeScript.Tests
         public class Nested
         {
             public Base Child { get; set; }
+            
+            public ICollection<Base> ChildCollection { get; set; }
         }
 
         public class DiscriminatorController
         {
             [Route("foo")]
             public string TestLeaf(Base param)
+            {
+                return null;
+            }
+            
+            [Route("foo-arr")]
+            public string TestLeafArr(ICollection<Base> param)
             {
                 return null;
             }
@@ -64,7 +73,7 @@ namespace NSwag.CodeGeneration.TypeScript.Tests
         [Fact]
         public async Task When_parameter_is_abstract_then_generate_union()
         {
-            //// Arrange
+            // Arrange
             var swaggerGenerator = new WebApiOpenApiDocumentGenerator(new WebApiOpenApiDocumentGeneratorSettings());
             var document = await swaggerGenerator.GenerateForControllerAsync<DiscriminatorController>();
             var clientGenerator = new TypeScriptClientGenerator(document, new TypeScriptClientGeneratorSettings
@@ -79,13 +88,15 @@ namespace NSwag.CodeGeneration.TypeScript.Tests
 
             var json = document.ToJson();
 
-            //// Act
+            // Act
             var code = clientGenerator.GenerateFile();
 
-            //// Assert
+            // Assert
             Assert.Contains("test(param: OneChild)", code);
             Assert.Contains("testLeaf(param: OneChild | SecondChild)", code);
+            Assert.Contains("testLeafArr(param: (OneChild | SecondChild)[])", code);
             Assert.Contains("child?: OneChild | SecondChild;", code);
+            Assert.Contains("childCollection?: (OneChild | SecondChild)[];", code);
         }
     }
 }

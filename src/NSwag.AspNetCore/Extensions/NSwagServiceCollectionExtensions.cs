@@ -34,7 +34,7 @@ namespace Microsoft.Extensions.DependencyInjection
             });
         }
 
-        /// <summary>Adds services required for Swagger 2.0 generation (change document settings to generate OpenAPI 3.0).</summary>
+        /// <summary>Adds services required for OpenAPI 3.0 generation (change document settings to generate Swagger 2.0).</summary>
         /// <param name="serviceCollection">The <see cref="IServiceCollection"/>.</param>
         /// <param name="configure">Configure the document.</param>
         public static IServiceCollection AddOpenApiDocument(this IServiceCollection serviceCollection, Action<AspNetCoreOpenApiDocumentGeneratorSettings, IServiceProvider> configure = null)
@@ -81,8 +81,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     settings.OperationProcessors.Add(operationProcessor);
                 }
 
-                var generator = new AspNetCoreOpenApiDocumentGenerator(settings);
-                return new OpenApiDocumentRegistration(settings.DocumentName, generator);
+                return new OpenApiDocumentRegistration(settings.DocumentName, settings);
             });
 
             var descriptor = serviceCollection.SingleOrDefault(d => d.ServiceType == typeof(OpenApiDocumentProvider));

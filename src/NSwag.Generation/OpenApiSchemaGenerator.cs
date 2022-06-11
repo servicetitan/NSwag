@@ -13,7 +13,7 @@ using NJsonSchema.Generation;
 
 namespace NSwag.Generation
 {
-    /// <summary>A <see cref="JsonSchemaGenerator"/> which only generate the schema for the root type.
+    /// <summary>A <see cref="JsonSchemaGenerator"/> which only generate the schema for the root type. 
     /// Referenced types are added to the service's Definitions collection. </summary>
     public class OpenApiSchemaGenerator : JsonSchemaGenerator
     {
@@ -21,7 +21,7 @@ namespace NSwag.Generation
 
         /// <summary>Initializes a new instance of the <see cref="OpenApiSchemaGenerator" /> class.</summary>
         /// <param name="settings">The settings.</param>
-        public OpenApiSchemaGenerator(JsonSchemaGeneratorSettings settings) : base(settings)
+        public OpenApiSchemaGenerator(OpenApiDocumentGeneratorSettings settings) : base(settings)
         {
         }
 
@@ -90,7 +90,7 @@ namespace NSwag.Generation
             return base.GenerateWithReferenceAndNullability(contextualType, isNullable, schemaResolver, transformation);
         }
 
-        protected bool IsFileResponse(Type returnType)
+        private bool IsFileResponse(Type returnType)
         {
             return returnType.IsAssignableToTypeName("FileResult", TypeNameStyle.Name) ||
                    returnType.Name == "IActionResult" ||

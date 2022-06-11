@@ -46,6 +46,9 @@ namespace NSwag.Generation
         /// <summary>Gets or sets the default response reference type null handling when no nullability information is available (if NotNullAttribute and CanBeNullAttribute are missing, default: NotNull).</summary>
         public ReferenceTypeNullHandling DefaultResponseReferenceTypeNullHandling { get; set; }
 
+        /// <summary>Gets or sets a value indicating whether to generate x-originalName properties when parameter name is differnt in .NET and HTTP (default: true).</summary>
+        public bool GenerateOriginalParameterNames { get; set; } = true;
+
         /// <summary>Gets the operation processors.</summary>
         [JsonIgnore]
         public OperationProcessorCollection OperationProcessors { get; } = new OperationProcessorCollection
@@ -70,6 +73,9 @@ namespace NSwag.Generation
         /// Gets or sets a value indicating whether controllers' XML documentation will be used as tag descriptions (but only when the controller name is used as a tag, default: false).
         /// </summary>
         public bool UseControllerSummaryAsTagDescription { get; set; }
+
+        /// <summary>Gets or sets a value indicating whether the HttpMethodAttribute Name property shall be used as OperationId.</summary>
+        public bool UseHttpAttributeNameAsOperationId { get; set; } = false;
 
         /// <summary>Inserts a function based operation processor at the beginning of the pipeline to be used to filter operations.</summary>
         /// <param name="filter">The processor filter.</param>

@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v13.10.2.0 (NJsonSchema v10.3.4.0 (Newtonsoft.Json v11.0.0.0))",
+  "x-generator": "NSwag v13.15.4.0 (NJsonSchema v10.6.5.0 (Newtonsoft.Json v11.0.0.0))",
   "swagger": "2.0",
   "info": {
     "title": "My Title",
@@ -11,7 +11,7 @@
         "tags": [
           "Pet"
         ],
-        "summary": "Creates an order ",
+        "summary": "Creates an order",
         "operationId": "Pet_CreateOrder",
         "produces": [
           "text/plain",
@@ -80,7 +80,7 @@
         "tags": [
           "Pet"
         ],
-        "operationId": "Pet_EditPet",
+        "operationId": "Pet_EditPetPUT",
         "consumes": [
           "application/json"
         ],
@@ -230,7 +230,7 @@
         "tags": [
           "Pet"
         ],
-        "operationId": "Pet_EditPet2",
+        "operationId": "Pet_EditPetPOST",
         "produces": [
           "application/json"
         ],

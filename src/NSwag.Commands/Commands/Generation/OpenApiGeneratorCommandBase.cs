@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NConsole;
@@ -69,6 +68,13 @@ namespace NSwag.Commands.Generation
         {
             get => Settings.DefaultResponseReferenceTypeNullHandling;
             set => Settings.DefaultResponseReferenceTypeNullHandling = value;
+        }
+
+        [Argument(Name = nameof(GenerateOriginalParameterNames), IsRequired = false, Description = "Generate x-originalName properties when parameter name is differnt in .NET and HTTP (default: true).")]
+        public bool GenerateOriginalParameterNames
+        {
+            get => Settings.GenerateOriginalParameterNames;
+            set => Settings.GenerateOriginalParameterNames = value;
         }
 
         [Argument(Name = "DefaultEnumHandling", IsRequired = false, Description = "The default enum handling ('String' or 'Integer'), default: Integer.")]
@@ -135,6 +141,20 @@ namespace NSwag.Commands.Generation
         {
             get => Settings.AllowReferencesWithProperties;
             set => Settings.AllowReferencesWithProperties = value;
+        }
+
+        [Argument(Name = "UseXmlDocumentation", IsRequired = false, Description = "Read XML Docs files (default: true).")]
+        public bool UseXmlDocumentation
+        {
+            get => Settings.UseXmlDocumentation;
+            set => Settings.UseXmlDocumentation = value;
+        }
+
+        [Argument(Name = "ResolveExternalXmlDocumentation", IsRequired = false, Description = "Resolve the XML Docs from the NuGet cache or .NET SDK directory (default: true).")]
+        public bool ResolveExternalXmlDocumentation
+        {
+            get => Settings.ResolveExternalXmlDocumentation;
+            set => Settings.ResolveExternalXmlDocumentation = value;
         }
 
         [Argument(Name = "ExcludedTypeNames", IsRequired = false, Description = "The excluded type names (same as JsonSchemaIgnoreAttribute).")]
@@ -217,10 +237,17 @@ namespace NSwag.Commands.Generation
             set => Settings.AllowNullableBodyParameters = value;
         }
 
+        [Argument(Name = "UseHttpAttributeNameAsOperationId", IsRequired = false, Description = "Gets or sets a value indicating whether the HttpMethodAttribute Name property shall be used as OperationId.")]
+        public bool UseHttpAttributeNameAsOperationId
+        {
+            get => Settings.UseHttpAttributeNameAsOperationId;
+            set => Settings.UseHttpAttributeNameAsOperationId = value;
+        }
+
         public async Task<TSettings> CreateSettingsAsync(AssemblyLoader.AssemblyLoader assemblyLoader, IServiceProvider serviceProvider, string workingDirectory)
         {
             var mvcOptions = serviceProvider?.GetRequiredService<IOptions<MvcOptions>>().Value;
-#if NET5_0 || NETCOREAPP3_0
+#if NETCOREAPP3_0_OR_GREATER 
             JsonSerializerSettings serializerSettings;
             try
             {
@@ -244,7 +271,7 @@ namespace NSwag.Commands.Generation
             return Settings;
         }
 
-        protected async Task<IDisposable> CreateWebHostAsync(AssemblyLoader.AssemblyLoader assemblyLoader)
+        protected IServiceProvider GetServiceProvider(AssemblyLoader.AssemblyLoader assemblyLoader)
         {
             if (!string.IsNullOrEmpty(CreateWebHostBuilderMethod))
             {
@@ -255,18 +282,17 @@ namespace NSwag.Commands.Generation
                 var programType = assemblyLoader.GetType(programTypeName) ??
                     throw new InvalidOperationException("The Program class could not be determined.");
 
-                var methodName = segments.Last();
                 var method = programType.GetRuntimeMethod(segments.Last(), new[] { typeof(string[]) });
                 if (method != null)
                 {
-                    return ((IWebHostBuilder)method.Invoke(null, new object[] { new string[0] })).Build();
+                    return ((IWebHostBuilder)method.Invoke(null, new object[] { new string[0] })).Build().Services;
                 }
                 else
                 {
                     method = programType.GetRuntimeMethod(segments.Last(), new Type[0]);
                     if (method != null)
                     {
-                        return ((IWebHostBuilder)method.Invoke(null, new object[0])).Build();
+                        return ((IWebHostBuilder)method.Invoke(null, new object[0])).Build().Services;
                     }
                     else
                     {
@@ -278,61 +304,13 @@ namespace NSwag.Commands.Generation
             {
                 // Load configured startup type (obsolete)
                 var startupType = assemblyLoader.GetType(StartupType);
-                return WebHost.CreateDefaultBuilder().UseStartup(startupType).Build();
+                return WebHost.CreateDefaultBuilder().UseStartup(startupType).Build().Services;
             }
             else
             {
-                try
-                {
-                    // Search Program class and use CreateWebHostBuilder method
-                    var assemblies = LoadAssemblies(AssemblyPaths, assemblyLoader);
-                    var firstAssembly = assemblies.FirstOrDefault() ?? throw new InvalidOperationException("No assembly are be loaded from AssemblyPaths.");
-
-                    var programType = firstAssembly.ExportedTypes.First(t => t.Name == "Program") ??
-                        throw new InvalidOperationException("The Program class could not be determined in the assembly '" + firstAssembly.FullName + "'.");
-
-                    var method =
-                        programType.GetRuntimeMethod("CreateWebHostBuilder", new[] { typeof(string[]) }) ??
-                        programType.GetRuntimeMethod("CreateWebHostBuilder", new Type[0]);
-
-                    if (method != null)
-                    {
-                        return ((IWebHostBuilder)method.Invoke(
-                            null, method.GetParameters().Length > 0 ? new object[] { new string[0] } : new object[0])).Build();
-                    }
-                    else
-                    {
-#if NET5_0 || NETCOREAPP3_0
-                        method =
-                            programType.GetRuntimeMethod("CreateHostBuilder", new[] { typeof(string[]) }) ??
-                            programType.GetRuntimeMethod("CreateHostBuilder", new Type[0]);
-
-                        if (method != null)
-                        {
-                            return ((Microsoft.Extensions.Hosting.IHostBuilder)method.Invoke(
-                                null, method.GetParameters().Length > 0 ? new object[] { new string[0] } : new object[0])).Build();
-                        }
-                        else
-#endif
-                        {
-                            throw new InvalidOperationException("The Program class '" + programType.FullName + "' does not have a CreateWebHostBuilder()/CreateHostBuilder() method.");
-                        }
-                    }
-                }
-                catch
-                {
-                    // Search Startup class as fallback
-                    var assemblies = LoadAssemblies(AssemblyPaths, assemblyLoader);
-                    var firstAssembly = assemblies.FirstOrDefault() ?? throw new InvalidOperationException("No assembly are be loaded from AssemblyPaths.");
-
-                    var startupType = firstAssembly.ExportedTypes.FirstOrDefault(t => t.Name == "Startup");
-                    if (startupType == null)
-                    {
-                        throw new InvalidOperationException("The Startup class could not be determined in the assembly '" + firstAssembly.FullName + "'.");
-                    }
-
-                    return WebHost.CreateDefaultBuilder().UseStartup(startupType).Build();
-                }
+                var assemblies = LoadAssemblies(AssemblyPaths, assemblyLoader);
+                var firstAssembly = assemblies.FirstOrDefault() ?? throw new InvalidOperationException("No assembly are be loaded from AssemblyPaths.");
+                return ServiceProviderResolver.GetServiceProvider(firstAssembly);
             }
         }
 

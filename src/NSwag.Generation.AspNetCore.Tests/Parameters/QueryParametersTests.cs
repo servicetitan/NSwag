@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using NSwag.Generation.AspNetCore.Tests.Web.Controllers.Parameters;
 using Xunit;
 
@@ -24,7 +25,10 @@ namespace NSwag.Generation.AspNetCore.Tests.Parameters
             Assert.True(operation.ActualParameters.Last().IsRequired);
 
             Assert.Equal(2, operation.ActualParameters.Count);
+
             Assert.Equal("Bar.", operation.ActualParameters.First().Description);
+            Assert.Equal(JToken.Parse("42"), operation.ActualParameters.First().Example);
+
             Assert.Equal("Baz.", operation.ActualParameters.Last().Description);
         }
 
@@ -62,6 +66,22 @@ namespace NSwag.Generation.AspNetCore.Tests.Parameters
             Assert.False(operation.ActualParameters.Skip(0).First().IsRequired);
             Assert.False(operation.ActualParameters.Skip(1).First().IsRequired);
             Assert.True(operation.ActualParameters.Skip(2).First().IsRequired);
+        }
+
+        [Fact]
+        public async Task When_parameter_is_overwritten_then_original_name_is_set()
+        {
+            // Arrange
+            var settings = new AspNetCoreOpenApiDocumentGeneratorSettings { RequireParametersWithoutDefault = false };
+
+            // Act
+            var document = await GenerateDocumentAsync(settings, typeof(RenamedQueryParameterController));
+
+            // Assert
+            var parameter = document.Operations.First().Operation.ActualParameters.First();
+
+            Assert.Equal("month", parameter.Name);
+            Assert.Equal("months", parameter.OriginalName);
         }
     }
 }

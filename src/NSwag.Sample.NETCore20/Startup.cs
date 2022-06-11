@@ -67,7 +67,7 @@ namespace NSwag.Sample.NETCore20
             // - http://localhost:65384/openapi_redoc
 
             // Add Swagger 2.0 document serving middleware
-            app.UseSwagger(options =>
+            app.UseOpenApi(options =>
             {
                 options.DocumentName = "swagger";
                 options.Path = "/swagger/v1/swagger.json";
@@ -89,7 +89,7 @@ namespace NSwag.Sample.NETCore20
             });
 
             //// Add OpenAPI 3.0 document serving middleware
-            app.UseSwagger(options =>
+            app.UseOpenApi(options =>
             {
                 options.DocumentName = "openapi";
                 options.Path = "/openapi/v1/openapi.json";

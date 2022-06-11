@@ -25,7 +25,7 @@ using NSwag.Generation;
 using NJsonSchema.Generation;
 using Namotion.Reflection;
 
-#if NET5_0 || NETCOREAPP || NETSTANDARD
+#if NETCOREAPP || NETSTANDARD
 using System.Runtime.Loader;
 #endif
 
@@ -60,6 +60,9 @@ namespace NSwag.Commands.Generation.AspNetCore
 
         [Argument(Name = nameof(NoBuild), IsRequired = false, Description = "Don't build the project. Only use this when the build is up-to-date.")]
         public bool NoBuild { get; set; }
+
+        [Argument(Name = nameof(MSBuildOutputPath), IsRequired = false, Description = "The MSBuild output path")]
+        public string MSBuildOutputPath { get; set; }
 
         [Argument(Name = nameof(Verbose), IsRequired = false, Description = "Print verbose output.")]
         public bool Verbose { get; set; } = true;
@@ -107,6 +110,7 @@ namespace NSwag.Commands.Generation.AspNetCore
                     Configuration,
                     Runtime,
                     NoBuild,
+                    MSBuildOutputPath,
                     verboseHost).ConfigureAwait(false);
 
                 if (!File.Exists(Path.Combine(projectMetadata.OutputPath, projectMetadata.TargetFileName)))
@@ -168,7 +172,7 @@ namespace NSwag.Commands.Generation.AspNetCore
                         cleanupFiles.Add(copiedAppConfig);
                     }
                 }
-#elif NET5_0 || NETCOREAPP || NETSTANDARD
+#elif NETCOREAPP || NETSTANDARD
                 var toolDirectory = AppContext.BaseDirectory;
                 if (!Directory.Exists(toolDirectory))
                 {
@@ -188,10 +192,18 @@ namespace NSwag.Commands.Generation.AspNetCore
 
                     var binaryName = LauncherBinaryName + ".dll";
                     var executorBinary = Path.Combine(toolDirectory, binaryName);
+                   
+                    if (!File.Exists(executorBinary))
+                    {
+                        binaryName = LauncherBinaryName + ".exe";
+                        executorBinary = Path.Combine(toolDirectory, binaryName);
+                    }
+
                     if (!File.Exists(executorBinary))
                     {
                         throw new InvalidOperationException($"Unable to locate {binaryName} in {toolDirectory}.");
                     }
+
                     args.Add(executorBinary);
                 }
 #endif
@@ -308,11 +320,8 @@ namespace NSwag.Commands.Generation.AspNetCore
         protected override async Task<string> RunIsolatedAsync(AssemblyLoader.AssemblyLoader assemblyLoader)
         {
             var currentWorkingDirectory = ChangeWorkingDirectoryAndSetAspNetCoreEnvironment();
-            using (var webHost = await CreateWebHostAsync(assemblyLoader))
-            {
-                var document = await GenerateDocumentAsync(assemblyLoader, webHost.TryGetPropertyValue<IServiceProvider>("Services"), currentWorkingDirectory);
-                return UseDocumentProvider ? document.ToJson() : document.ToJson(OutputType);
-            }
+            var document = await GenerateDocumentAsync(assemblyLoader, GetServiceProvider(assemblyLoader), currentWorkingDirectory);
+            return UseDocumentProvider ? document.ToJson() : document.ToJson(OutputType);
         }
 
         private static void TryDeleteFiles(List<string> files)

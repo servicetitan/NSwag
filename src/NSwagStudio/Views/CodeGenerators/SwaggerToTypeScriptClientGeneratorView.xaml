@@ -84,6 +84,10 @@
                                                   ToolTip="UseSingletonProvider"
                                                   Content="Use Angular 6 Singleton Provider" Margin="0,4,0,12" />
 
+                                        <CheckBox IsChecked="{Binding Command.IncludeHttpContext, Mode=TwoWay}" 
+                                                  ToolTip="IncludeHttpContext"
+                                                  Content="Include the httpContext parameter" Margin="0,4,0,12" />
+
                                         <TextBlock Text="HTTP service class" FontWeight="Bold" Margin="0,0,0,6" />
                                         <TextBlock Text="HttpClient recommended for new projects (Angular 4.3+)" Margin="0,0,0,6" />
                                         <Grid>
@@ -115,8 +119,8 @@
                                 </GroupBox>
 
                                 <CheckBox IsChecked="{Binding Command.UseAbortSignal, Mode=TwoWay}" 
-                                          Visibility="{Binding Command.Template, ConverterParameter='Fetch', Converter={StaticResource EqualityConverter}}"
-                                          Content="Use the AbortSignal (Fetch template only)"
+                                          Visibility="{Binding Command.Template, ConverterParameter='Fetch,Aurelia', Converter={StaticResource EqualityConverter}}"
+                                          Content="Use the AbortSignal (Fetch/Aurelia template only)"
                                           ToolTip="UseAbortSignal"
                                           Margin="0,0,0,12" />
 

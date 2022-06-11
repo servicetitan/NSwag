@@ -19,29 +19,25 @@ namespace NSwag.Commands
         {
             get
             {
-#if !NETCOREAPP && !NET5_0 && !NETSTANDARD
+#if NETFRAMEWORK
                 return IntPtr.Size == 4 ? Runtime.WinX86 : Runtime.WinX64;
 #else
                 var framework = PlatformServices.Default.Application.RuntimeFramework;
                 if (framework.Identifier == ".NETCoreApp")
                 {
-                    if (framework.Version.Major == 2 && framework.Version.Minor == 1)
+                    if (framework.Version.Major == 2)
                     {
                         return Runtime.NetCore21;
                     }
-                    else if (framework.Version.Major == 2 && framework.Version.Minor > 1)
+                    else if (framework.Version.Major >= 6)
                     {
-                        return Runtime.NetCore22;
+                        return Runtime.Net60;
                     }
                     else if (framework.Version.Major >= 5)
                     {
                         return Runtime.Net50;
                     }
-                    else if (framework.Version.Major >= 3 && framework.Version.Minor < 1)
-                    {
-                        return Runtime.NetCore30;
-                    }
-                    else if (framework.Version.Major >= 3 && framework.Version.Minor >= 1)
+                    else if (framework.Version.Major >= 3)
                     {
                         return Runtime.NetCore31;
                     }

@@ -1,8 +1,0 @@
-<Project ToolsVersion="latest" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="TargetFramework;TargetFrameworks;Version">
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../../'))" />
-<PropertyGroup>
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">netstandard2.0</TargetFrameworks>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Version Condition="'$(NSwagVersionOverride)' != ''">$(NSwagVersionOverride)</Version>
-</PropertyGroup>
-</Project>
