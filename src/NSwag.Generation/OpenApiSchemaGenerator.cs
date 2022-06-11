@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------
 // <copyright file="SwaggerJsonSchemaGenerator.cs" company="NJsonSchema">
 //     Copyright (c) Rico Suter. All rights reserved.
 // </copyright>
@@ -90,7 +90,10 @@ namespace NSwag.Generation
             return base.GenerateWithReferenceAndNullability(contextualType, isNullable, schemaResolver, transformation);
         }
 
-        private bool IsFileResponse(Type returnType)
+        /// <summary>
+        ///PATCH: Used from overriden method
+        /// </summary>
+        protected bool IsFileResponse(Type returnType)
         {
             return returnType.IsAssignableToTypeName("FileResult", TypeNameStyle.Name) ||
                    returnType.Name == "IActionResult" ||

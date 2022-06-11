@@ -355,7 +355,10 @@ namespace NSwag.Generation.WebApi.Processors
             OpenApiParameter operationParameter;
 
             var typeDescription = _settings.ReflectionService.GetDescription(contextualParameter, _settings);
-            var isRequired = _settings.AllowNullableBodyParameters == false || contextualParameter.ContextAttributes.FirstAssignableToTypeNameOrDefault("RequiredAttribute", TypeNameStyle.Name) != null;
+            // PATCH: Use settings for detecting if body param is required
+            var isRequired = !_settings.AllowNullableBodyParameters
+                || (contextualParameter.ContextAttributes.FirstAssignableToTypeNameOrDefault("RequiredAttribute", TypeNameStyle.Name) != null)
+                || contextualParameter.ParameterInfo.HasDefaultValue == false;
             var isNullable = _settings.AllowNullableBodyParameters && (typeDescription.IsNullable && !isRequired);
 
             var operation = context.OperationDescription.Operation;
