@@ -19,6 +19,12 @@
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.0" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NConsole" Version="3.9.6519.30868" />
     <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
