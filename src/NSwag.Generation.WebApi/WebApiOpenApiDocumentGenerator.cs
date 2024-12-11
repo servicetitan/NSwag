@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="WebApiToSwaggerGenerator.cs" company="NSwag">
 //     Copyright (c) Rico Suter. All rights reserved.
 // </copyright>
@@ -255,9 +255,9 @@ namespace NSwag.Generation.WebApi
 
             foreach (dynamic attribute in operationProcessorAttribute)
             {
-                var operationProcessor = ObjectExtensions.HasProperty(attribute, "Parameters") ?
-                    (IOperationProcessor)Activator.CreateInstance(attribute.Type, attribute.Parameters) :
-                    (IOperationProcessor)Activator.CreateInstance(attribute.Type);
+                dynamic operationProcessor = ObjectExtensions.HasProperty(attribute, "Parameters") ?
+                    Activator.CreateInstance(attribute.Type, attribute.Parameters) :
+                    Activator.CreateInstance(attribute.Type);
 
                 if (operationProcessor.Process(context) == false)
                 {
